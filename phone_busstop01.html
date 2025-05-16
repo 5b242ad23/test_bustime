@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>木更津→川崎 バス時刻</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f8ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 0.5em;
+    }
+    .time-box {
+      background: white;
+      padding: 1.5em;
+      border-radius: 1em;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+    }
+    .label {
+      font-size: 1.2em;
+      margin: 0.5em 0;
+    }
+    .value {
+      font-size: 2em;
+      font-weight: bold;
+      color: #007acc;
+    }
+  </style>
+</head>
+<body>
+  <h1>木更津 → 川崎 バス発車時刻</h1>
+  <div class="time-box">
+    <div class="label">現在時刻</div>
+    <div class="value" id="currentTime">--:--</div>
+    <div class="label">次のバス</div>
+    <div class="value" id="nextBus">--:--</div>
+  </div>
+
+  <script>
+    // 仮のバス時刻データ（24時間表記）
+    const busTimes = [
+      "06:00", "07:30", "09:00", "10:30",
+      "12:00", "13:30", "15:00", "16:30",
+      "18:00", "19:30", "21:00"
+    ];
+
+    function getNextBusTime() {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      for (let time of busTimes) {
+        const [hour, minute] = time.split(":").map(Number);
+        const busMinutes = hour * 60 + minute;
+        if (busMinutes >= currentMinutes) return time;
+      }
+      return "本日の運行終了";
+    }
+
+    function updateDisplay() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById("currentTime").textContent = `${h}:${m}`;
+      document.getElementById("nextBus").textContent = getNextBusTime();
+    }
+
+    updateDisplay();
+    setInterval(updateDisplay, 60000); // 1分ごとに更新
+  </script>
+</body>
+</html>
