@@ -3,35 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>木更津→川崎 バス時刻</title>
+  <title>バス時刻表示アプリ</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 0;
-      padding: 0;
       background: #f0f8ff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      margin: 0;
+      padding: 1em;
       text-align: center;
     }
     h1 {
-      font-size: 1.8em;
+      font-size: 1.6em;
       margin-bottom: 0.5em;
+    }
+    .controls {
+      margin-bottom: 1em;
+    }
+    select {
+      font-size: 1em;
+      padding: 0.4em;
+      border-radius: 5px;
+      margin: 0.5em;
     }
     .time-box {
       background: white;
       padding: 1.5em;
       border-radius: 1em;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 90%;
       max-width: 400px;
+      margin: 0 auto;
     }
     .label {
       font-size: 1.2em;
-      margin: 0.5em 0;
+      margin-top: 1em;
     }
     .value {
       font-size: 2em;
@@ -41,42 +45,80 @@
   </style>
 </head>
 <body>
-  <h1>木更津 → 川崎 バス発車時刻</h1>
+  <h1>バス時刻表示アプリ</h1>
+
+  <div class="controls">
+    <label for="directionSelect">方向：</label>
+    <select id="directionSelect">
+      <option value="kisarazu">木更津 → 川崎</option>
+      <option value="kawasaki">川崎 → 木更津</option>
+    </select>
+  </div>
+
   <div class="time-box">
     <div class="label">現在時刻</div>
     <div class="value" id="currentTime">--:--</div>
-    <div class="label">次のバス</div>
+    <div class="label">（<span id="dayType">--</span>）次のバス</div>
     <div class="value" id="nextBus">--:--</div>
   </div>
 
   <script>
-    // 仮のバス時刻データ（24時間表記）
-    const busTimes = [
-      "06:00", "07:30", "09:00", "10:30",
-      "12:00", "13:30", "15:00", "16:30",
-      "18:00", "19:30", "21:00"
-    ];
+    const timetable = {
+      kisarazu: {
+        weekday: [
+          "06:05", "06:35", "07:05", "07:35", "08:05", "08:35", "09:35", "10:35", "11:35",
+          "12:35", "13:35", "14:35", "15:35", "16:35", "17:35", "18:35", "19:35", "20:35"
+        ],
+        holiday: [
+          "06:35", "07:35", "08:35", "09:35", "10:35", "11:35", "12:35", "13:35", "14:35",
+          "15:35", "16:35", "17:35", "18:35", "19:35", "20:35"
+        ]
+      },
+      kawasaki: {
+        weekday: [
+          "06:45", "07:45", "08:45", "09:45", "10:45", "11:45", "12:45", "13:45", "14:45",
+          "15:45", "16:45", "17:45", "18:45", "19:45", "20:45"
+        ],
+        holiday: [
+          "07:15", "08:15", "09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15",
+          "16:15", "17:15", "18:15", "19:15", "20:15"
+        ]
+      }
+    };
 
-    function getNextBusTime() {
+    function isHoliday(date) {
+      const day = date.getDay();
+      return day === 0 || day === 6; // 日曜=0, 土曜=6
+    }
+
+    function getNextBus(times) {
       const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const nowMins = now.getHours() * 60 + now.getMinutes();
 
-      for (let time of busTimes) {
-        const [hour, minute] = time.split(":").map(Number);
-        const busMinutes = hour * 60 + minute;
-        if (busMinutes >= currentMinutes) return time;
+      for (let t of times) {
+        const [h, m] = t.split(":").map(Number);
+        const totalMins = h * 60 + m;
+        if (totalMins >= nowMins) return t;
       }
       return "本日の運行終了";
     }
 
     function updateDisplay() {
       const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
       document.getElementById("currentTime").textContent = `${h}:${m}`;
-      document.getElementById("nextBus").textContent = getNextBusTime();
+
+      const direction = document.getElementById("directionSelect").value;
+      const isHolidayFlag = isHoliday(now);
+      const dayType = isHolidayFlag ? "holiday" : "weekday";
+      const times = timetable[direction][dayType];
+
+      document.getElementById("dayType").textContent = isHolidayFlag ? "土日祝" : "平日";
+      document.getElementById("nextBus").textContent = getNextBus(times);
     }
 
+    document.getElementById("directionSelect").addEventListener("change", updateDisplay);
     updateDisplay();
     setInterval(updateDisplay, 60000); // 1分ごとに更新
   </script>
